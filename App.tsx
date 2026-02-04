@@ -26,6 +26,59 @@ export const speak = (text: string) => {
   }
 };
 
+// Web Audio API Sound Synthesizer for Explosions
+const playExplosionSound = () => {
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextClass) return;
+  
+  const ctx = new AudioContextClass();
+  const sampleRate = ctx.sampleRate;
+  const duration = 1.5;
+  const bufferSize = sampleRate * duration;
+  const buffer = ctx.createBuffer(1, bufferSize, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  // Generate white noise for the explosion blast
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+
+  const noiseSource = ctx.createBufferSource();
+  noiseSource.buffer = buffer;
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1000, ctx.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + duration);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.5, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+  noiseSource.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+
+  // Low-frequency thump
+  const oscillator = ctx.createOscillator();
+  const oscGain = ctx.createGain();
+  
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(100, ctx.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.5);
+  
+  oscGain.gain.setValueAtTime(0.4, ctx.currentTime);
+  oscGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+  
+  oscillator.connect(oscGain);
+  oscGain.connect(ctx.destination);
+
+  noiseSource.start();
+  oscillator.start();
+  noiseSource.stop(ctx.currentTime + duration);
+  oscillator.stop(ctx.currentTime + 0.5);
+};
+
 const App: React.FC = () => {
   const [status, setStatus] = useState<GameStatus>('START');
   const [theme, setTheme] = useState<Theme>('dark');
@@ -119,6 +172,9 @@ const App: React.FC = () => {
     setActiveExplosions(prev => [...prev, newExplosion]);
     setLives(prev => Math.max(0, prev - 1));
     
+    // Play explosion sound effect
+    playExplosionSound();
+    
     if (type === GrenadeType.STUN) {
       setIsStunned(true);
       if (stunTimeoutRef.current) clearTimeout(stunTimeoutRef.current);
@@ -193,7 +249,7 @@ const App: React.FC = () => {
             const nextBc = bc + 1;
             const pts = (nextBc === BOX_CAPACITY ? 20 : 5) * upgrades.scoreMultiplier;
             setScore(s => s + Math.floor(pts));
-            if (nextBc === BOX_CAPACITY) speak('קופסה מלאה');
+            // Removed speak('קופסה מלאה') per user request
             return nextBc === BOX_CAPACITY ? 0 : nextBc;
           });
           continue; 
