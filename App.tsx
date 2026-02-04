@@ -281,6 +281,7 @@ const App: React.FC = () => {
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (status !== 'PLAYING' || isStunned) return;
+    // WASD and Arrows support
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') setPlayerPosition(p => Math.min(currentLines - 1, p + 1));
     else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') setPlayerPosition(p => Math.max(0, p - 1));
     else if (e.key === 'Escape' || e.key === ' ') {
@@ -355,7 +356,7 @@ const App: React.FC = () => {
                   <i className={`fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`}></i>
                   {theme === 'dark' ? 'מצב יום' : 'מצב לילה'}
                 </button>
-                <button onClick={resetGame} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition-all">התחל מחדש</button>
+                <button onClick={resetGame} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition-all">אתחל (Reset)</button>
               </div>
             </div>
           ) : (
