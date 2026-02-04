@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { HighScore, Theme } from '../types';
+import { speak } from '../App';
 
 interface GameOverScreenProps {
   score: number;
@@ -22,6 +23,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ score, highScores, onRe
     if (name.trim() && !isSaved) {
       onSaveScore(name.trim(), score);
       setIsSaved(true);
+      speak('השיא נשמר');
     }
   };
 
@@ -73,7 +75,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ score, highScores, onRe
         ) : null}
         
         <button 
-          onClick={onRestart}
+          onClick={() => { onRestart(); speak('משחק חדש'); }}
           className={`w-full text-lg sm:text-xl font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95 ${isDark ? 'bg-white hover:bg-gray-200 text-black' : 'bg-gray-900 hover:bg-black text-white'}`}
         >
           נסה שוב

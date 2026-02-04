@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BOX_CAPACITY, Theme } from '../types';
+import { speak } from '../App';
 
 interface HUDProps {
   lives: number;
@@ -72,7 +73,7 @@ const HUD: React.FC<HUDProps> = ({ lives, score, boxCount, level, timeLeft, isSl
           })}
         </div>
         <button 
-          onClick={onPause}
+          onClick={() => { onPause(); speak('עצור'); }}
           className={`p-2 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition-colors border ${isDark ? 'bg-gray-800 hover:bg-gray-700 border-gray-700' : 'bg-gray-200 hover:bg-gray-300 border-gray-300'}`}
         >
           <i className={`fas fa-bars text-xs sm:text-base ${isDark ? 'text-white' : 'text-gray-700'}`}></i>

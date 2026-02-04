@@ -15,6 +15,17 @@ const GAME_DURATION = 180;
 const STORAGE_KEY = 'grenade_factory_high_scores';
 const THEME_KEY = 'grenade_factory_theme';
 
+// Native TTS Helper
+export const speak = (text: string) => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'he-IL';
+    utterance.rate = 1.1;
+    window.speechSynthesis.speak(utterance);
+  }
+};
+
 const App: React.FC = () => {
   const [status, setStatus] = useState<GameStatus>('START');
   const [theme, setTheme] = useState<Theme>('dark');
@@ -48,14 +59,13 @@ const App: React.FC = () => {
   const slowEffectTimeoutRef = useRef<number>(null);
   const stunTimeoutRef = useRef<number>(null);
 
-  // Load persistence on mount
   useEffect(() => {
     const savedScores = localStorage.getItem(STORAGE_KEY);
     if (savedScores) {
       try { setHighScores(JSON.parse(savedScores)); } catch (e) { console.error(e); }
     }
     const savedTheme = localStorage.getItem(THEME_KEY) as Theme;
-    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
+    if (savedTheme) {
       setTheme(savedTheme);
     }
   }, []);
@@ -72,9 +82,11 @@ const App: React.FC = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(nextTheme);
     localStorage.setItem(THEME_KEY, nextTheme);
+    speak(nextTheme === 'dark' ? 'מצב לילה' : 'מצב יום');
   };
 
   const startGame = () => {
+    speak('המשמרת מתחילה');
     setLives(INITIAL_LIVES);
     setScore(0);
     setBoxCount(0);
@@ -89,6 +101,12 @@ const App: React.FC = () => {
     setIsStunned(false);
     speedMultiplier.current = 1;
     setStatus('PLAYING');
+  };
+
+  const resetGame = () => {
+    speak('מאתחל משחק');
+    startGame();
+    setShowShop(false);
   };
 
   const handleExplosion = (type: GrenadeType, x: number, y: number) => {
@@ -113,6 +131,7 @@ const App: React.FC = () => {
   };
 
   const applyPowerup = (type: PowerupType) => {
+    speak('בונוס נאסף');
     switch (type) {
       case PowerupType.LIFE:
         setLives(prev => Math.min(MAX_LIVES, prev + 1));
@@ -138,23 +157,12 @@ const App: React.FC = () => {
       [GrenadeType.STICKY]: 0,
       [GrenadeType.INCENDIARY]: 0,
     };
-
-    if (unlocked || lvl >= 2) {
-      weights[GrenadeType.STICKY] = unlocked ? 20 : 15;
-      weights[GrenadeType.FRAG] = unlocked ? 25 : 30;
-      weights[GrenadeType.SMOKE] = 30;
-    }
-    if (unlocked || lvl >= 3) {
-      weights[GrenadeType.INCENDIARY] = unlocked ? 25 : 20;
-      weights[GrenadeType.STUN] = 25;
-      weights[GrenadeType.FRAG] = 20;
-      weights[GrenadeType.SMOKE] = 20;
-    }
+    if (unlocked || lvl >= 2) weights[GrenadeType.STICKY] = unlocked ? 20 : 15;
+    if (unlocked || lvl >= 3) weights[GrenadeType.INCENDIARY] = unlocked ? 25 : 20;
 
     const entries = Object.entries(weights) as [GrenadeType, number][];
     const totalWeight = entries.reduce((acc, [_, w]) => acc + w, 0);
     let random = Math.random() * totalWeight;
-
     for (const [type, weight] of entries) {
       if (random < weight) return type;
       random -= weight;
@@ -166,17 +174,11 @@ const App: React.FC = () => {
     if (status !== 'PLAYING') return;
 
     if (score > 100 && level === 1) {
-      setLevel(2);
-      setCurrentLines(4);
-      speedMultiplier.current = 1.2;
+      setLevel(2); setCurrentLines(4); speedMultiplier.current = 1.2;
     } else if (score > 250 && level === 2) {
-      setLevel(3);
-      setCurrentLines(5);
-      speedMultiplier.current = 1.4;
+      setLevel(3); setCurrentLines(5); speedMultiplier.current = 1.4;
     } else if (score > 500 && level === 3) {
-      setLevel(4);
-      setCurrentLines(6);
-      speedMultiplier.current = 1.7;
+      setLevel(4); setCurrentLines(6); speedMultiplier.current = 1.7;
     }
 
     const currentMultiplier = isSlowed ? speedMultiplier.current * 0.5 : speedMultiplier.current;
@@ -184,7 +186,6 @@ const App: React.FC = () => {
     setGrenades(prev => {
       const nextGrenades: GrenadeInstance[] = [];
       const fallSpeed = 0.5 * currentMultiplier;
-
       for (const g of prev) {
         const nextY = g.y + fallSpeed;
         if (nextY >= 88 && nextY <= 95 && g.lineIndex === playerPosition) {
@@ -192,6 +193,7 @@ const App: React.FC = () => {
             const nextBc = bc + 1;
             const pts = (nextBc === BOX_CAPACITY ? 20 : 5) * upgrades.scoreMultiplier;
             setScore(s => s + Math.floor(pts));
+            if (nextBc === BOX_CAPACITY) speak('קופסה מלאה');
             return nextBc === BOX_CAPACITY ? 0 : nextBc;
           });
           continue; 
@@ -237,8 +239,7 @@ const App: React.FC = () => {
       lastSpawnTime.current = now;
     }
 
-    const powerupInterval = 15000 + (Math.random() * 10000);
-    if (now - lastPowerupSpawnTime.current > powerupInterval) {
+    if (now - lastPowerupSpawnTime.current > 15000 + (Math.random() * 10000)) {
       const randomLine = Math.floor(Math.random() * currentLines);
       const types = [PowerupType.LIFE, PowerupType.TIME, PowerupType.SLOW];
       const randomType = types[Math.floor(Math.random() * types.length)];
@@ -257,20 +258,16 @@ const App: React.FC = () => {
   useEffect(() => {
     if (status === 'PLAYING') {
       gameLoopRef.current = requestAnimationFrame(updateGame);
-    } else {
-      if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
+    } else if (gameLoopRef.current) {
+      cancelAnimationFrame(gameLoopRef.current);
     }
-    return () => {
-      if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
-    };
+    return () => { if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current); };
   }, [status, updateGame]);
 
   useEffect(() => {
     let timerId: number;
     if (status === 'PLAYING' && timeLeft > 0) {
-      timerId = window.setInterval(() => {
-        setTimeLeft(t => Math.max(0, t - 1));
-      }, 1000);
+      timerId = window.setInterval(() => setTimeLeft(t => Math.max(0, t - 1)), 1000);
     }
     return () => clearInterval(timerId);
   }, [status, timeLeft]);
@@ -278,26 +275,17 @@ const App: React.FC = () => {
   useEffect(() => {
     if (lives <= 0 || timeLeft === 0) {
       setStatus('GAMEOVER');
+      speak('המשמרת נגמרה');
     }
   }, [lives, timeLeft]);
 
-  const moveLeft = () => {
-    if (isStunned) return;
-    setPlayerPosition(prev => Math.max(0, prev - 1));
-  };
-  const moveRight = () => {
-    if (isStunned) return;
-    setPlayerPosition(prev => Math.min(currentLines - 1, prev + 1));
-  };
-
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (status !== 'PLAYING' || isStunned) return;
-    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-      moveRight();
-    } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-      moveLeft();
-    } else if (e.key === 'Escape' || e.key === ' ') {
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') setPlayerPosition(p => Math.min(currentLines - 1, p + 1));
+    else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') setPlayerPosition(p => Math.max(0, p - 1));
+    else if (e.key === 'Escape' || e.key === ' ') {
       setStatus('PAUSED');
+      speak('הפסקה');
     }
   }, [status, currentLines, isStunned]);
 
@@ -308,6 +296,7 @@ const App: React.FC = () => {
 
   const purchaseUpgrade = (type: keyof UpgradesState, cost: number) => {
     if (score >= cost) {
+      speak('שדרוג נרכש');
       setScore(s => s - cost);
       setUpgrades(prev => {
         if (type === 'catcherWidth') return { ...prev, catcherWidth: prev.catcherWidth + 0.1 };
@@ -322,41 +311,30 @@ const App: React.FC = () => {
   return (
     <div className={`relative w-full h-screen overflow-hidden flex flex-col font-sans select-none transition-colors duration-500 ${theme === 'dark' ? 'bg-[#121212]' : 'bg-[#f0f2f5]'}`}>
       <HUD 
-        lives={lives} 
-        score={score} 
-        boxCount={boxCount} 
-        level={level} 
-        timeLeft={timeLeft}
-        isSlowed={isSlowed}
-        isStunned={isStunned}
-        theme={theme}
-        onPause={() => setStatus('PAUSED')} 
+        lives={lives} score={score} boxCount={boxCount} level={level} 
+        timeLeft={timeLeft} isSlowed={isSlowed} isStunned={isStunned} 
+        theme={theme} onPause={() => { setStatus('PAUSED'); speak('הפסקה'); }} 
       />
       
       <GameBoard 
-        grenades={grenades} 
-        powerups={powerups}
-        linesCount={currentLines} 
-        playerPosition={playerPosition} 
-        catcherWidthMult={upgrades.catcherWidth}
-        isStunned={isStunned}
-        activeExplosions={activeExplosions}
-        theme={theme}
+        grenades={grenades} powerups={powerups} linesCount={currentLines} 
+        playerPosition={playerPosition} catcherWidthMult={upgrades.catcherWidth}
+        isStunned={isStunned} activeExplosions={activeExplosions} theme={theme}
       />
 
       {status === 'PLAYING' && (
-        <div className="absolute inset-x-0 bottom-8 px-6 pointer-events-none z-40 flex justify-between sm:hidden" dir="ltr">
+        <div className="absolute inset-x-0 bottom-16 px-6 pointer-events-none z-40 flex justify-between sm:hidden" dir="ltr">
           <button 
-            onPointerDown={(e) => { e.stopPropagation(); moveLeft(); }}
-            className={`pointer-events-auto w-24 h-24 backdrop-blur-md rounded-full flex items-center justify-center border-2 shadow-2xl transition-all active:scale-90 ${isStunned ? 'opacity-50 cursor-not-allowed' : ''} ${theme === 'dark' ? 'bg-white/10 border-white/20 active:bg-white/30' : 'bg-black/10 border-black/20 active:bg-black/20'}`}
+            onPointerDown={(e) => { e.stopPropagation(); setPlayerPosition(p => Math.max(0, p - 1)); }}
+            className={`pointer-events-auto w-20 h-20 backdrop-blur-md rounded-full flex items-center justify-center border-2 shadow-2xl transition-all active:scale-90 ${isStunned ? 'opacity-50' : ''} ${theme === 'dark' ? 'bg-white/10 border-white/20' : 'bg-black/10 border-black/20'}`}
           >
-            <i className={`fas fa-chevron-left text-4xl ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}></i>
+            <i className={`fas fa-chevron-left text-3xl ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}></i>
           </button>
           <button 
-            onPointerDown={(e) => { e.stopPropagation(); moveRight(); }}
-            className={`pointer-events-auto w-24 h-24 backdrop-blur-md rounded-full flex items-center justify-center border-2 shadow-2xl transition-all active:scale-90 ${isStunned ? 'opacity-50 cursor-not-allowed' : ''} ${theme === 'dark' ? 'bg-white/10 border-white/20 active:bg-white/30' : 'bg-black/10 border-black/20 active:bg-black/20'}`}
+            onPointerDown={(e) => { e.stopPropagation(); setPlayerPosition(p => Math.min(currentLines - 1, p + 1)); }}
+            className={`pointer-events-auto w-20 h-20 backdrop-blur-md rounded-full flex items-center justify-center border-2 shadow-2xl transition-all active:scale-90 ${isStunned ? 'opacity-50' : ''} ${theme === 'dark' ? 'bg-white/10 border-white/20' : 'bg-black/10 border-black/20'}`}
           >
-            <i className={`fas fa-chevron-right text-4xl ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}></i>
+            <i className={`fas fa-chevron-right text-3xl ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}></i>
           </button>
         </div>
       )}
@@ -364,30 +342,36 @@ const App: React.FC = () => {
       <ExplosionOverlay explosions={activeExplosions} />
 
       {status === 'START' && <StartScreen onStart={startGame} highScores={highScores} theme={theme} />}
+      
       {status === 'PAUSED' && (
         <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
           {!showShop ? (
             <div className={`p-8 rounded-xl border-2 text-center shadow-2xl min-w-[320px] ${theme === 'dark' ? 'bg-[#1e1e1e] border-yellow-600' : 'bg-white border-yellow-500'}`}>
               <h2 className={`text-4xl font-bold mb-6 ${theme === 'dark' ? 'text-yellow-500' : 'text-yellow-600'}`}>המשחק מושהה</h2>
               <div className="flex flex-col gap-4">
-                <button onClick={() => setStatus('PLAYING')} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded-lg transition-all">המשך משחק</button>
-                <button onClick={() => setShowShop(true)} className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-8 rounded-lg transition-all"><i className="fas fa-shopping-cart ml-2"></i>שדרוגי מפעל</button>
-                
-                {/* Theme Toggle Button */}
-                <button onClick={toggleTheme} className={`font-bold py-3 px-8 rounded-lg transition-all flex items-center justify-center gap-3 ${theme === 'dark' ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>
+                <button onClick={() => { setStatus('PLAYING'); speak('חוזרים לעבודה'); }} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded-lg transition-all">המשך משחק</button>
+                <button onClick={() => { setShowShop(true); speak('חנות שדרוגים'); }} className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-8 rounded-lg transition-all"><i className="fas fa-shopping-cart ml-2"></i>שדרוגי מפעל</button>
+                <button onClick={toggleTheme} className={`font-bold py-3 px-8 rounded-lg transition-all flex items-center justify-center gap-3 ${theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
                   <i className={`fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`}></i>
                   {theme === 'dark' ? 'מצב יום' : 'מצב לילה'}
                 </button>
-
-                <button onClick={startGame} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition-all">התחל מחדש</button>
+                <button onClick={resetGame} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition-all">התחל מחדש</button>
               </div>
             </div>
           ) : (
-            <UpgradeShop score={score} upgrades={upgrades} onPurchase={purchaseUpgrade} onClose={() => setShowShop(false)} theme={theme} />
+            <UpgradeShop score={score} upgrades={upgrades} onPurchase={purchaseUpgrade} onClose={() => { setShowShop(false); speak('סגירת חנות'); }} theme={theme} />
           )}
         </div>
       )}
+      
       {status === 'GAMEOVER' && <GameOverScreen score={score} highScores={highScores} onRestart={startGame} onSaveScore={saveHighScore} theme={theme} />}
+
+      <footer className={`absolute bottom-0 w-full p-2 text-[10px] sm:text-xs text-center border-t transition-colors z-50 ${theme === 'dark' ? 'bg-black/50 text-gray-500 border-gray-800' : 'bg-white/80 text-gray-400 border-gray-200'}`}>
+        <div className="flex justify-center gap-4">
+          <span>(C) Noam Gold AI 2026</span>
+          <a href="mailto:goldnoamai@gmail.com" onClick={() => speak('שליחת משוב')} className="hover:text-yellow-500 transition-colors">Send Feedback: goldnoamai@gmail.com</a>
+        </div>
+      </footer>
     </div>
   );
 };

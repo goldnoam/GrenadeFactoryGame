@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { HighScore, Theme } from '../types';
+import { speak } from '../App';
 
 interface StartScreenProps {
   onStart: () => void;
@@ -27,7 +28,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, highScores, theme })
           <ul className={`text-right space-y-2 mb-8 text-sm sm:text-base ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             <li className="flex items-center gap-3">
               <i className={`fas fa-keyboard ${isDark ? 'text-yellow-600' : 'text-yellow-500'}`}></i>
-              <span>חיצים / A+D במקלדת, או חיצי מגע בנייד.</span>
+              <span>חיצים או A D במקלדת, או חיצי מגע בנייד.</span>
             </li>
             <li className="flex items-center gap-3">
               <i className={`fas fa-box ${isDark ? 'text-yellow-600' : 'text-yellow-500'}`}></i>
@@ -35,7 +36,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, highScores, theme })
             </li>
             <li className="flex items-center gap-3">
               <i className="fas fa-star text-pink-500"></i>
-              <span>אסוף בונוסים: חיים, זמן, או האטה (Snowflake).</span>
+              <span>בונוסים: חיים, זמן, או האטה.</span>
             </li>
             <li className="flex items-center gap-3">
               <i className="fas fa-exclamation-triangle text-red-600"></i>
@@ -44,7 +45,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, highScores, theme })
           </ul>
           
           <button 
-            onClick={onStart}
+            onClick={() => { onStart(); speak('מתחילים משמרת'); }}
             className="w-full bg-yellow-600 hover:bg-yellow-500 text-white text-xl sm:text-2xl font-black py-4 px-8 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(202,138,4,0.3)]"
           >
             התחל משמרת
@@ -72,7 +73,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, highScores, theme })
         )}
       </div>
       
-      <p className={`mt-8 text-xs sm:text-sm ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Esc / Space לעצירה | המפעל פתוח 24/7</p>
+      <p className={`mt-8 text-xs sm:text-sm ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Esc או Space לעצירה | המפעל פתוח 24 שעות ביממה</p>
     </div>
   );
 };

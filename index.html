@@ -4,106 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מפעל הרימונים</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>מפעל הרימונים | Grenade Factory Tycoon</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="משחק אסטרטגיה תעשייתי מאתגר בו עליך לארוז רימונים, לשדרג את המפעל ולהימנע מפיצוצים.">
+    <meta name="keywords" content="משחקים, רימונים, טייקון, משחק אקשן, מפעל הרימונים, Noam Gold AI">
+    <meta name="author" content="Noam Gold AI">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3616/3616551.png">
+    
+    <!-- Production Styles -->
+    <link rel="stylesheet" href="./index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        .shake { animation: shake 0.5s; }
-        
-        @keyframes smoke-fade {
-            0% { opacity: 0; transform: scale(0.5); filter: blur(10px); }
-            10% { opacity: 0.9; transform: scale(1.2); filter: blur(5px); }
-            100% { opacity: 0; transform: scale(3.5); filter: blur(30px); }
-        }
-        .smoke-particle { animation: smoke-fade 5s ease-out forwards; }
+    
+    <!-- Google Adsense Placeholder -->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
 
-        @keyframes flash-out {
-            0% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-        .flash-effect { animation: flash-out 1.5s forwards; }
-
-        @keyframes splat {
-            0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            20% { transform: scale(1.4) rotate(15deg); opacity: 1; }
-            100% { transform: scale(1) rotate(5deg); opacity: 0.6; }
-        }
-        .sticky-splat { animation: splat 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
-        @keyframes ember {
-            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-150px) scale(0) rotate(360deg); opacity: 0; }
-        }
-        .ember-particle { animation: ember 2s ease-out forwards; }
-
-        @keyframes spark-fly {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--tw-translate-x), var(--tw-translate-y)) scale(0); opacity: 0; }
-        }
-        .secondary-spark { animation: spark-fly 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
-
-        @keyframes expand-ring {
-            0% { transform: scale(0); opacity: 1; border-width: 40px; }
-            100% { transform: scale(6); opacity: 0; border-width: 1px; }
-        }
-        .shockwave { animation: expand-ring 0.8s ease-out forwards; }
-
-        @keyframes fragment-fly {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(1080deg); opacity: 0; }
-        }
-        .frag-fragment { 
-            animation: fragment-fly 1.2s cubic-bezier(0.1, 0.5, 0.2, 1) forwards; 
-        }
-
-        @keyframes heat-distort {
-            0%, 100% { transform: scale(1) skewX(0deg); opacity: 0.4; filter: blur(2px); }
-            50% { transform: scale(1.1) skewX(2deg); opacity: 0.7; filter: blur(5px); }
-        }
-        .heat-distortion { animation: heat-distort 2s infinite ease-in-out; }
-
-        @keyframes float-powerup {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-10px) scale(1.1); }
-        }
-        .powerup-float { animation: float-powerup 2s ease-in-out infinite; }
-
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-        .powerup-ring { animation: pulse-ring 1.5s ease-out infinite; }
-
-        body {
-            background-color: #1a1a1a;
-            color: #e0e0e0;
-            overflow: hidden;
-            user-select: none;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
-    </style>
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-  }
-}
-</script>
+    <script type="importmap">
+    {
+      "imports": {
+        "react/": "https://esm.sh/react@^19.2.4/",
+        "react": "https://esm.sh/react@^19.2.4",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+      }
+    }
+    </script>
 </head>
 <body>
     <div id="root"></div>

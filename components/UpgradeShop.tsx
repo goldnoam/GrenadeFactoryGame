@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { UpgradesState, Theme } from '../types';
+import { speak } from '../App';
 
 interface UpgradeShopProps {
   score: number;
@@ -33,7 +34,7 @@ const UpgradeShop: React.FC<UpgradeShopProps> = ({ score, upgrades, onPurchase, 
     {
       id: 'spawnRate' as keyof UpgradesState,
       name: 'האצת ייצור',
-      description: 'הגברת קצב ייצור הרימונים (סיכון גבוה = רווח גבוה)',
+      description: 'הגברת קצב ייצור הרימונים',
       cost: 200,
       icon: 'fa-bolt',
       color: 'text-yellow-400'
@@ -41,7 +42,7 @@ const UpgradeShop: React.FC<UpgradeShopProps> = ({ score, upgrades, onPurchase, 
     {
       id: 'unlockAdvanced' as keyof UpgradesState,
       name: 'מחלקת פיתוח',
-      description: 'פתיחת רימוני תבערה ודביקים באופן מיידי',
+      description: 'פתיחת רימונים מתקדמים',
       cost: 500,
       icon: 'fa-flask',
       color: 'text-purple-400',
@@ -79,7 +80,7 @@ const UpgradeShop: React.FC<UpgradeShopProps> = ({ score, upgrades, onPurchase, 
               </div>
               <button
                 disabled={!canAfford || isPurchased}
-                onClick={() => onPurchase(item.id, item.cost)}
+                onClick={() => { onPurchase(item.id, item.cost); speak(item.name + ' נרכש'); }}
                 className={`py-2 px-4 rounded-lg font-bold text-sm transition-all ${isPurchased ? (isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500') : canAfford ? 'bg-purple-600 hover:bg-purple-500 text-white active:scale-95' : (isDark ? 'bg-gray-800 text-gray-600' : 'bg-gray-200 text-gray-400')}`}
               >
                 {isPurchased ? 'נרכש' : `${item.cost} נק'`}
@@ -90,7 +91,7 @@ const UpgradeShop: React.FC<UpgradeShopProps> = ({ score, upgrades, onPurchase, 
       </div>
 
       <button 
-        onClick={onClose}
+        onClick={() => { onClose(); speak('סגור'); }}
         className={`w-full py-3 rounded-xl font-bold transition-all ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
       >
         סגור חנות
